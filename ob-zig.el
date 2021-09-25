@@ -244,12 +244,9 @@ FORMAT can be either a format string or a function which is called with VAL."
   (let* ((basetype (org-babel-zig-val-to-base-type val))
 	 (type
 	  (pcase basetype
-	    (`integerp '("int" "%d"))
-	    (`floatp '("double" "%f"))
-	    (`stringp
-	     (list
-	      (if (eq org-babel-c-variant 'd) "string" "const char*")
-	      "\"%s\""))
+	    (`integerp '("isize" "%d"))
+	    (`floatp '("f32" "%f"))
+            (`stringp '("[] u8" "\"%s\"") )
 	    (_ (error "unknown type %S" basetype)))))
     (cond
      ((integerp val) type) ;; an integer declared in the #+begin_src line
@@ -259,26 +256,26 @@ FORMAT can be either a format string or a function which is called with VAL."
 	(lambda (val)
 	  (cons
 	   (format "[%d][%d]" (length val) (length (car val)))
-	   (concat
-	    (if (eq org-babel-c-variant 'd) "[\n" "{\n")
+           (concat
+            "{\n"
 	    (mapconcat
 	     (lambda (v)
 	       (concat
-		(if (eq org-babel-c-variant 'd) " [" " {")
+                "{\n"
 		(mapconcat (lambda (w) (format ,(cadr type) w)) v ",")
-		(if (eq org-babel-c-variant 'd) "]" "}")))
+                "}\n"))
 	     val
 	     ",\n")
-	    (if (eq org-babel-c-variant 'd) "\n]" "\n}"))))))
+            "}\n")))))
      ((or (listp val) (vectorp val)) ;; a list declared in the #+begin_src line
       `(,(car type)
 	(lambda (val)
 	  (cons
 	   (format "[%d]" (length val))
 	   (concat
-	    (if (eq org-babel-c-variant 'd) "[" "{")
+            "{"
 	    (mapconcat (lambda (v) (format ,(cadr type) v)) val ",")
-	    (if (eq org-babel-c-variant 'd) "]" "}"))))))
+            "}")))))
      (t ;; treat unknown types as string
       type))))
 
@@ -319,9 +316,9 @@ of the same value."
 	   (formatted (org-babel-zig-format-val type-data val))
 	   (suffix (car formatted))
 	   (data (cdr formatted)))
-      (format "%s %s%s = %s;"
+      (format "var %s: %s%s = %s;"
+              var
 	      type
-	      var
 	      suffix
 	      data))))
 
@@ -331,11 +328,11 @@ of the same value."
     (cond
      ((listp (cadr pair)) ;; a table
       (concat
-       (format "const int %s_rows = %d;" (car pair) (length (cdr pair)))
+       (format "const usize %s_rows = %d;" (car pair) (length (cdr pair)))
        "\n"
-       (format "const int %s_cols = %d;" (car pair) (length (cadr pair)))))
+       (format "const usize %s_cols = %d;" (car pair) (length (cadr pair)))))
      (t ;; a list declared in the #+begin_src line
-      (format "const int %s_cols = %d;" (car pair) (length (cdr pair)))))))
+      (format "const usize %s_cols = %d;" (car pair) (length (cdr pair)))))))
 
 (defun org-babel-zig-utility-header-to-zig ()
   "Generate a utility function to convert a column name

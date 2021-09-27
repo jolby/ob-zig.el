@@ -67,6 +67,23 @@ parameter may be used, like zig -v"
   :version "24.3"
   :type 'string)
 
+(defcustom org-babel-zig-integer-type "isize"
+  "Default zig integer type"
+  :group 'org-babel
+  :version "24.3"
+  :type 'string)
+
+(defcustom org-babel-zig-floating-point-type "f64"
+  "Default zig floating-point type"
+  :group 'org-babel
+  :version "24.3"
+  :type 'string)
+
+(defcustom org-babel-zig-string-type "[] u8"
+  "Default zig floating-point type"
+  :group 'org-babel
+  :version "24.3"
+  :type 'string)
 
 (defun org-babel-expand-body:zig (body params &optional processed-params)
   "Expand a block of zig code with org-babel according to
@@ -244,10 +261,10 @@ FORMAT can be either a format string or a function which is called with VAL."
   (let* ((basetype (org-babel-zig-val-to-base-type val))
 	 (type
 	  (pcase basetype
-	    (`integerp '("isize" "%d"))
-	    (`floatp '("f32" "%f"))
+	    (`integerp '(,org-babel-zig-integer-type "%d"))
+	    (`floatp '(,org-babel-zig-floating-point-type "%f"))
             (`stringp '("[] u8" "\"%s\"") )
-	    (_ (error "unknown type %S" basetype)))))
+	    (_ (error "Unknown type %S" basetype)))))
     (cond
      ((integerp val) type) ;; an integer declared in the #+begin_src line
      ((floatp val) type) ;; a numeric declared in the #+begin_src line

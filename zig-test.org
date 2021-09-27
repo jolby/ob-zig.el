@@ -22,8 +22,3 @@ pub fn main() void {
 #+end_src
 
 #+RESULTS:
-: >zig run /tmp/babel-Xb5w59/Zig-src-CDuuSO.zig
-: STDOUT:
-:
-: STDERR:
-: WARN:Hello, world!

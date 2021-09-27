@@ -1,0 +1,53 @@
+#+Title: a collection of examples for ob-C tests
+#+OPTIONS: ^:nil
+* Simple tests
+:PROPERTIES:
+:ID:       dc04e7e6-da1b-4ab5-9ee9-fd4d2e67dc3e
+:END:
+
+#+source: simple
+#+begin_src zig :imports '(std) :results silent
+  std.debug.warn("{}\n", .{42});
+  const stdout = std.io.getStdOut().writer();
+  try stdout.print("{}\n", .{42});
+#+end_src
+
+#+source: integer_var
+#+begin_src cpp :var q=12 :includes "<iostream>" :results silent
+  std::cout << q;
+  return 0;
+#+end_src
+
+#+source: integer_var
+#+begin_src D :var q=12 :results silent
+  writefln ("%s", q);
+#+end_src
+
+#+source: two_var
+#+begin_src cpp :var q=12 :var p=10 :includes "<iostream>" :results silent
+  std::cout << p+q;
+  return 0;
+#+end_src
+
+#+source: two_var
+#+begin_src D :var q=12 :var p=10 :results silent
+  writefln ("%s", p+q);
+#+end_src
+
+#+source: string_var
+#+begin_src cpp :var q="word" :includes '(<iostream> <cstring>) :results silent
+  std::cout << q << ' ' << std::strlen(q);
+  return 0;
+#+end_src
+
+#+source: string_var
+#+begin_src D :var q="word" :results silent
+  writefln ("%s %s", q, q.length);
+#+end_src
+
+#+source: define
+#+begin_src cpp :defines N 42  :includes "<iostream>" :results silent
+  std::cout << N;
+  return 0;
+#+end_src
+

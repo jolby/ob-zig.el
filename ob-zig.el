@@ -1,4 +1,4 @@
-;;; ob-zig.el --- org-babel functions for zig evaluation
+;;; ob-zig.el --- Org Babel functions for Zig evaluation
 
 ;; Copyright (C) Joel Boehland
 
@@ -26,7 +26,7 @@
 
 ;;; Commentary:
 
-;; Org-Babel support for evaluating C, C++, D code.
+;; Org-Babel support for evaluating Zig code.
 
 ;;; Requirements:
 

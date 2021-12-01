@@ -79,7 +79,7 @@ parameter may be used, like zig -v"
   :version "24.3"
   :type 'string)
 
-(defcustom org-babel-zig-string-type "[] u8"
+(defcustom org-babel-zig-string-type "[]const u8"
   "Default zig floating-point type"
   :group 'org-babel
   :version "24.3"
@@ -147,14 +147,14 @@ its header arguments."
 		 using-namespaces
 		 "\n")
 		;; variables
-		;; (mapconcat 'org-babel-zig-var-to-zig vars "\n")
+		(mapconcat 'org-babel-zig-var-to-zig-source vars "\n")
 		;; ;; table sizes
 		;; (mapconcat 'org-babel-zig-table-sizes-to-zig vars "\n")
 		;; ;; tables headers utility
-		;; (when colnames
-		;;   (org-babel-zig-utility-header-to-zig))
+		(when colnames
+		  (org-babel-zig-utility-header-to-zig))
 		;; ;; tables headers
-		;; (mapconcat 'org-babel-zig-header-to-zig colnames "\n")
+		(mapconcat 'org-babel-zig-header-to-zig colnames "\n")
 		;; body
 		(if main-p
 		    (org-babel-zig-ensure-main-wrap body)
@@ -165,7 +165,7 @@ its header arguments."
   "Wrap BODY in a \"main\" function call if none exists."
   (if (string-match "pub fn[ \t\n\r]*main(.*)" body)
       body
-    (format "pub fn main() void {\n%s\n}\n" body)))
+    (format "pub fn main() !void {\n%s\n}\n" body)))
 
 ;; This is the main function which is called to evaluate a code
 ;; block.
@@ -226,7 +226,19 @@ This function is called by `org-babel-execute-src-block'"
     (with-temp-file tmp-src-file (insert full-body))
     (let ((results (org-babel-eval full-command "")))
       (message "CMD RES: %s" results)
-      results)))
+      ;; results
+      (when results
+        (setq results (org-remove-indentation results))
+        (org-babel-reassemble-table
+         (org-babel-result-cond (cdr (assq :result-params params))
+           (org-babel-read results t)
+           (let ((tmp-file (org-babel-temp-file "zig-")))
+             (with-temp-file tmp-file (insert results))
+             (org-babel-import-elisp-from-file tmp-file)))
+         (org-babel-pick-name
+          (cdr (assq :colname-names params)) (cdr (assq :colnames params)))
+         (org-babel-pick-name
+          (cdr (assq :rowname-names params)) (cdr (assq :rownames params))))))))
 
 ;; This function should be used to assign any variables in params in
 ;; the context of the session environment.
@@ -247,54 +259,51 @@ Return the initialized session."
     ))
 
 ;; helper functions
-(defun org-babel-zig-format-val (type val)
-  "Handle the FORMAT part of TYPE with the data from VAL."
-  (let ((format-data (cadr type)))
-    (if (stringp format-data)
-	(cons "" (format format-data val))
-      (funcall format-data val))))
+(defun org-babel-zig-format-list-val (list-vals format-data)
+  (concat "{"
+          (mapconcat (lambda (v) (format format-data v)) list-vals ",")
+          "}"))
 
-(defun org-babel-zig-val-to-zig-type (val)
-  "Determine the type of VAL.
-Return a list (TYPE-NAME FORMAT).  TYPE-NAME should be the name of the type.
-FORMAT can be either a format string or a function which is called with VAL."
-  (let* ((basetype (org-babel-zig-val-to-base-type val))
-	 (type
-	  (pcase basetype
-	    (`integerp '(,org-babel-zig-integer-type "%d"))
-	    (`floatp '(,org-babel-zig-floating-point-type "%f"))
-            (`stringp '("[] u8" "\"%s\"") )
-	    (_ (error "Unknown type %S" basetype)))))
-    (cond
-     ((integerp val) type) ;; an integer declared in the #+begin_src line
-     ((floatp val) type) ;; a numeric declared in the #+begin_src line
-     ((and (listp val) (listp (car val))) ;; a table
-      `(,(car type)
-	(lambda (val)
-	  (cons
-	   (format "[%d][%d]" (length val) (length (car val)))
-           (concat
-            "{\n"
-	    (mapconcat
-	     (lambda (v)
-	       (concat
-                "{\n"
-		(mapconcat (lambda (w) (format ,(cadr type) w)) v ",")
-                "}\n"))
-	     val
-	     ",\n")
-            "}\n")))))
-     ((or (listp val) (vectorp val)) ;; a list declared in the #+begin_src line
-      `(,(car type)
-	(lambda (val)
-	  (cons
-	   (format "[%d]" (length val))
-	   (concat
-            "{"
-	    (mapconcat (lambda (v) (format ,(cadr type) v)) val ",")
-            "}")))))
-     (t ;; treat unknown types as string
-      type))))
+(defun org-babel-zig-list-val-to-zig (val type-descriptor)
+  (let* ((dims (format "[%d]" (length val)))
+         (zig-list-val (org-babel-zig-format-list-val val (plist-get type-descriptor :format-data))))
+    (plist-put type-descriptor :dims dims)
+    (plist-put type-descriptor :zig-value zig-list-val)
+    ))
+
+(defun org-babel-zig-format-table-val (table-vals format-data inner-dims zig-type)
+  (concat "{\n"
+          (mapconcat (lambda (v)
+                       (concat
+                        "    " ;indentation
+                        inner-dims
+                        zig-type
+                        "{"
+                        (mapconcat
+                         (lambda (w) (format format-data w))
+                         v ",")
+                        "}"))
+                     table-vals
+                     ",\n")
+          "}"))
+
+(defun org-babel-zig-table-val-to-zig (val type-descriptor)
+  (let* ((dims (format "[%d][%d]" (length val) (length (car val))))
+         (inner-dims (format "[%d]" (length (car val))))
+         (format-data (plist-get type-descriptor :format-data))
+         (zig-type (plist-get type-descriptor :zig-type))
+         (zig-table-val (org-babel-zig-format-table-val val format-data inner-dims zig-type)))
+    (plist-put type-descriptor :dims dims)
+    (plist-put type-descriptor :zig-value zig-table-val)
+    ))
+
+(defun org-babel-zig-val-to-zig (val type-descriptor)
+  (let* ((format-data (plist-get type-descriptor :format-data))
+        (zig-val-str (if (stringp format-data)
+                         ;; (cons "" (format format-data val))
+                         (format format-data val)
+                       (funcall format-data val))))
+        (plist-put type-descriptor :zig-value zig-val-str)))
 
 (defun org-babel-zig-val-to-base-type (val)
   "Determine the base type of VAL which may be
@@ -307,19 +316,64 @@ FORMAT can be either a format string or a function which is called with VAL."
    ((or (listp val) (vectorp val))
     (let ((type nil))
       (mapc (lambda (v)
-	      (pcase (org-babel-zig-val-to-base-type v)
-		(`stringp (setq type 'stringp))
-		(`floatp
-		 (when (or (not type) (eq type 'integerp))
-		   (setq type 'floatp)))
-		(`integerp
-		 (unless type (setq type 'integerp)))))
-	    val)
+              (pcase (org-babel-zig-val-to-base-type v)
+                (`stringp (setq type 'stringp))
+                (`floatp
+                 (when (or (not type) (eq type 'integerp))
+                   (setq type 'floatp)))
+                (`integerp
+                 (unless type (setq type 'integerp)))))
+            val)
       type))
    (t 'stringp)))
 
-(defun org-babel-zig-var-to-zig (pair)
-  "Convert an elisp val into a string of C code specifying a var
+(defun org-babel-zig-val-type-descriptor (val)
+  "Determine the type of VAL.
+
+Return a plist:
+(:base-type base elisp type of VAL 'stringp|'integerp|'floatp
+ :zig-type formatted string of the zig type, suitable for output in source code
+ :rank scalar|list|table
+ :format format-data|format-function
+ :dims formatted-dimensions or empty string, suitable for output in source code "
+  (let* ((base-type (org-babel-zig-val-to-base-type val))
+         (rank (cond
+                ((and (listp val) (listp (car val))) "table")
+                ((and (or (listp val) (vectorp val))) "list")
+                (t "scalar")))
+         (formatter
+          (pcase base-type
+            (`integerp "%d")
+            (`floatp "%f")
+            (`stringp "\"%s\"")
+            (_ (error "Unknown type %S" base-type))))
+         (zig-type
+          (pcase base-type
+            (`integerp org-babel-zig-integer-type)
+            (`floatp org-babel-zig-floating-point-type)
+            (`stringp org-babel-zig-string-type)
+            (_ (error "Unknown type %S" base-type))))
+         (type-descriptor
+          `(:base-type ,base-type
+            :zig-type ,zig-type
+            :rank ,rank
+            :format-data ,formatter)))
+
+    (message "TYPE D: %s" type-descriptor)
+    type-descriptor))
+
+(defun org-babel-zig-val-to-zig-type (val)
+  "Determine the type of VAL.
+Return a plist"
+  (let* ((type-descriptor (org-babel-zig-val-type-descriptor val)))
+    (cond
+     ((string= "table" (plist-get type-descriptor :rank)) (org-babel-zig-table-val-to-zig val type-descriptor))
+     ((string= "list" (plist-get type-descriptor :rank)) (org-babel-zig-list-val-to-zig val type-descriptor))
+     (t (org-babel-zig-val-to-zig val type-descriptor))
+    )))
+
+(defun org-babel-zig-var-to-zig-source (pair)
+  "Convert an elisp val into a string of zig code specifying a var
 of the same value."
   ;; TODO list support
   (let ((var (car pair))
@@ -329,80 +383,72 @@ of the same value."
       (when (= (length val) 1)
 	(setq val (string-to-char val))))
     (let* ((type-data (org-babel-zig-val-to-zig-type val))
-	   (type (car type-data))
-	   (formatted (org-babel-zig-format-val type-data val))
-	   (suffix (car formatted))
-	   (data (cdr formatted)))
-      (format "var %s: %s%s = %s;"
-              var
-	      type
-	      suffix
-	      data))))
+           (var-data (plist-put type-data :var-name var)))
+      (message "Var data: %s" var-data)
+      (cond
+       ((or (string= "table" (plist-get var-data :rank)) (string= "list" (plist-get var-data :rank)))
+        (format "const %s = %s%s%s;"
+                (plist-get var-data :var-name)
+                (plist-get var-data :dims)
+                (plist-get var-data :zig-type)
+                ;; (plist-get var-data :dims)
+                ;; (plist-get var-data :zig-type)
+                (plist-get var-data :zig-value)
+                ))
+       (t (format "var %s: %s = %s;"
+                  (plist-get var-data :var-name)
+                  (plist-get var-data :zig-type)
+                  (plist-get var-data :zig-value)
+                  )))
+      )))
 
-(defun org-babel-zig-table-sizes-to-zig (pair)
-  "Create constants of table dimensions, if PAIR is a table."
-  (when (listp (cdr pair))
-    (cond
-     ((listp (cadr pair)) ;; a table
-      (concat
-       (format "const usize %s_rows = %d;" (car pair) (length (cdr pair)))
-       "\n"
-       (format "const usize %s_cols = %d;" (car pair) (length (cadr pair)))))
-     (t ;; a list declared in the #+begin_src line
-      (format "const usize %s_cols = %d;" (car pair) (length (cdr pair)))))))
+;; (defun org-babel-zig-table-sizes-to-zig (pair)
+;;   "Create constants of table dimensions, if PAIR is a table."
+;;   (when (listp (cdr pair))
+;;     (cond
+;;      ((listp (cadr pair)) ;; a table
+;;       (concat
+;;        (format "const usize %s_rows = %d;" (car pair) (length (cdr pair)))
+;;        "\n"
+;;        (format "const usize %s_cols = %d;" (car pair) (length (cadr pair)))))
+;;      (t ;; a list declared in the #+begin_src line
+;;       (format "const usize %s_cols = %d;" (car pair) (length (cdr pair)))))))
 
 (defun org-babel-zig-utility-header-to-zig ()
   "Generate a utility function to convert a column name
 into a column number."
-  (pcase org-babel-c-variant
-    ((or `c `cpp)
-     (concat
-      (if (eq org-babel-c-variant 'c)
-          "extern "
-	"extern \"C\" ")
-      "int strcmp (const char *, const char *);
-int get_column_num (int nbcols, const char** header, const char* column)
-{
-  int c;
-  for (c=0; c<nbcols; c++)
-    if (strcmp(header[c],column)==0)
-      return c;
-  return -1;
+
+"
+pub fn get_column_idx(header: [2][]const u8, column: []const u8) isize {
+    for (header) |col, i| {
+        if (std.mem.eql(u8, std.mem.span(col), std.mem.span(column))) {
+            return @intCast(isize, i);
+        }
+    }
+    return -1;
 }
-"))
-    (`d
-     "int get_column_num (string[] header, string column)
-{
-  foreach (c, h; header)
-    if (h==column)
-      return to!int(c);
-  return -1;
-}
-")))
+"
+)
 
 (defun org-babel-zig-header-to-zig (head)
-  "Convert an elisp list of header table into a C or D vector
+  "Convert an elisp list of header table into a zig vector
 specifying a variable with the name of the table."
   (let ((table (car head))
         (headers (cdr head)))
     (concat
      (format
-      (pcase org-babel-c-variant
-	((or `c `cpp) "const char* %s_header[%d] = {%s};")
-	(`d "string %s_header[%d] = [%s];"))
+      "const %s_header = [%s][]const u8{%s};"
       table
       (length headers)
       (mapconcat (lambda (h) (format "%S" h)) headers ","))
      "\n"
-     (pcase org-babel-c-variant
-       ((or `c `cpp)
-	(format
-	 "const char* %s_h (int row, const char* col) { return %s[row][get_column_num(%d,%s_header,col)]; }"
-	 table table (length headers) table))
-       (`d
-	(format
-	 "string %s_h (size_t row, string col) { return %s[row][get_column_num(%s_header,col)]; }"
-	 table table table))))))
+     (format
+      "
+pub fn %s_h (row: usize, col: []const u8) []const u8 {
+    return %s[row][@intCast(usize, get_column_idx(%s_header,col))];
+}
+"
+      table table table))))
 
 (provide 'ob-zig)
 ;;; ob-zig.el ends here

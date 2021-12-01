@@ -15,9 +15,15 @@
 ;;
 ;;
 ;;; Code:
+(defvar ob-zig-setup-location nil)
 
-(defvar root-org-test-dir "/home/jboehland/repos/emacs/doom-emacs/.local/straight/repos/org/testing")
-(defvar ob-zig-test-dir "/home/jboehland/repos/zig/ob-zig.el")
+(if load-in-progress
+    (setq ob-zig-setup-location (symbol-file 'ob-zig-setup-location))
+  (setq ob-zig-setup-location (buffer-file-name)))
+
+;; (defvar root-org-test-dir "/home/jboehland/repos/emacs/doom-emacs/.local/straight/repos/org/testing")
+(defvar root-org-test-dir (expand-file-name "straight/repos/org/testing" doom-local-dir))
+(defvar ob-zig-test-dir (file-name-directory ob-zig-setup-location))
 
 (defun test-ob-zig-id-files ()
   (interactive)
@@ -36,9 +42,13 @@
 
 (defun test-ob-zig-setup-tests ()
   (interactive)
-  (when (and (stringp root-org-test-dir) (file-exists-p root-org-test-dir))
-    (add-to-list 'load-path root-org-test-dir))
-  (add-to-list 'load-path (file-name-directory (buffer-file-name)))
+  (if (and (stringp root-org-test-dir) (file-exists-p root-org-test-dir))
+      (add-to-list 'load-path root-org-test-dir)
+    (error "Required variable: root-org-test-dir [%s] not set or that directory doesn't exist! " root-org-test-dir))
+  (if (and (stringp ob-zig-setup-location) (file-exists-p ob-zig-setup-location))
+      (add-to-list 'load-path (file-name-directory  ob-zig-setup-location))
+    (error "Required variable: ob-zig-setup-location [%s] not set or that directory doesn't exist! " ob-zig-setup-location))
+
   (require 'org-test)
   (require 'org-archive)
   (require 'ob-zig)
@@ -46,7 +56,14 @@
 
   (org-babel-do-load-languages (and (mapc (lambda (lang) (add-to-list 'org-babel-load-languages (cons lang t)))
                                           '(zig org))
-                                    org-babel-load-languages)))
+                                    org-babel-load-languages))
+  (test-ob-zig-update-id-locations))
+
+(defun test-ob-zig-run-tests ()
+  (interactive)
+  (test-ob-zig-setup-tests)
+  (ert "^ob-zig"))
+
 
 (provide 'test-ob-zig-runner)
 ;;; test-ob-zig-runner.el ends here

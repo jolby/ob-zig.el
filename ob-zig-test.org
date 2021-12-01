@@ -7,47 +7,117 @@
 
 #+source: simple
 #+begin_src zig :imports '(std) :results silent
-  std.debug.warn("{}\n", .{42});
+  // std.debug.warn("{}\n", .{42});
   const stdout = std.io.getStdOut().writer();
-  try stdout.print("{}\n", .{42});
+  try stdout.print("{s}", .{"hello"});
 #+end_src
 
 #+source: integer_var
-#+begin_src cpp :var q=12 :includes "<iostream>" :results silent
-  std::cout << q;
-  return 0;
-#+end_src
-
-#+source: integer_var
-#+begin_src D :var q=12 :results silent
-  writefln ("%s", q);
+#+begin_src zig :var q=12 :imports '(std) :results silent
+  const stdout = std.io.getStdOut().writer();
+  try stdout.print("{}", .{q});
 #+end_src
 
 #+source: two_var
-#+begin_src cpp :var q=12 :var p=10 :includes "<iostream>" :results silent
-  std::cout << p+q;
-  return 0;
-#+end_src
-
-#+source: two_var
-#+begin_src D :var q=12 :var p=10 :results silent
-  writefln ("%s", p+q);
+#+begin_src zig :var p=10 :var q=12 :imports '(std) :results silent
+  const stdout = std.io.getStdOut().writer();
+  var p_plus_q: isize = p + q;
+  try stdout.print("{}", .{p_plus_q});
 #+end_src
 
 #+source: string_var
-#+begin_src cpp :var q="word" :includes '(<iostream> <cstring>) :results silent
-  std::cout << q << ' ' << std::strlen(q);
-  return 0;
+#+begin_src zig :var q="word" :imports '(std) :results silent
+  const stdout = std.io.getStdOut().writer();
+  try stdout.print("{s} {d}", .{q, q.len});
 #+end_src
 
-#+source: string_var
-#+begin_src D :var q="word" :results silent
-  writefln ("%s %s", q, q.length);
+#+source: list_var
+#+begin_src zig :var a='("abc" "def") :imports '(std)
+  const stdout = std.io.getStdOut().writer();
+  try stdout.print("{s}{s}{d}", .{a[0], a[1], a.len});
 #+end_src
 
-#+source: define
-#+begin_src cpp :defines N 42  :includes "<iostream>" :results silent
-  std::cout << N;
-  return 0;
+#+RESULTS: list_var
+: abcdef2
+
+* Integer table
+:PROPERTIES:
+:ID:       4a52142b-02e6-416b-a281-dd85c4f69da3
+:END:
+#+name: int_table
+| A | B |
+|---+---|
+| 1 | 2 |
+| 3 | 4 |
+
+
+#+source: int_table
+#+begin_src zig :var int_table=int_table :imports '(std) :results verbatim
+
+const stdout = std.io.getStdOut().writer();
+
+pub fn main() !void {
+    for (int_table) |row| {
+        for (row) |field| {
+            try stdout.print("{d} ", .{ field });
+        }
+        try stdout.print("\n", .{});
+    }
+    try stdout.print("A1: {d}\n", .{int_table_h(1, "A")});
+    try stdout.print("B0 is: {d}\n", .{int_table_h(0, "B")});
+}
 #+end_src
 
+#+RESULTS: int_table
+
+* Float Matrix
+:PROPERTIES:
+:ID:       e089fd7b-9634-450d-acb7-36a82168dc30
+:END:
+#+name: float_matrix
+| 1 | 2 |
+| 3 | 4 |
+
+* Mixed table
+:PROPERTIES:
+:ID:       e112bc2e-419a-4890-99c2-7ac4779531cc
+:END:
+
+#+name: mixed_table
+| day       | quantity |
+|-----------+----------|
+| monday    |       34 |
+| tuesday   |       41 |
+| wednesday |       56 |
+| thursday  |       17 |
+| friday    |       12 |
+| saturday  |        7 |
+| sunday    |        4 |
+
+#+source: mixed_table
+#+begin_src zig :var mixed_table=mixed_table :imports '(std) :results verbatim
+
+const stdout = std.io.getStdOut().writer();
+
+pub fn main() !void {
+    for (mixed_table) |row| {
+        for (row) |field| {
+            try stdout.print("{s} ", .{ field });
+        }
+        try stdout.print("\n", .{});
+    }
+    try stdout.print("Tuesday: {s}\n", .{mixed_table_h(1, "quantity")});
+    try stdout.print("Day for idx 4 is: {s}\n", .{mixed_table_h(4, "day")});
+}
+#+end_src
+
+#+RESULTS: mixed_table
+: monday 34
+: tuesday 41
+: wednesday 56
+: thursday 17
+: friday 12
+: saturday 7
+: sunday 4
+: Tuesday: 41
+: Day for idx 4 is: friday

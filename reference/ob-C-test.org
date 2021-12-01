@@ -81,6 +81,8 @@
   :ID:       cc65d6b3-8e8e-4f9c-94cd-f5a00cdeceb5
   :END:
 #+name: C-matrix
+| A | B |
+|---+---|
 | 1 | 2 |
 | 3 | 4 |
 

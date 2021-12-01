@@ -1,4 +1,4 @@
-#+Title: a collection of examples for ob-C tests
+#+Title: a collection of examples for ob-zig tests
 #+OPTIONS: ^:nil
 * Simple tests
 :PROPERTIES:
@@ -7,7 +7,6 @@
 
 #+source: simple
 #+begin_src zig :imports '(std) :results silent
-  // std.debug.warn("{}\n", .{42});
   const stdout = std.io.getStdOut().writer();
   try stdout.print("{s}", .{"hello"});
 #+end_src

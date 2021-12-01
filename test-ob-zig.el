@@ -27,8 +27,10 @@
   (should t))
 
 (ert-deftest ob-zig/elisp-to-zig-types ()
-  (should (= )))
-
+  (should (equal 'integerp (org-babel-zig-val-to-base-type 1)))
+  (should (equal 'floatp (org-babel-zig-val-to-base-type 1.5)))
+  (should (equal 'stringp (org-babel-zig-val-to-base-type "FOO")))
+  )
 
 (ert-deftest ob-zig/simple-program ()
   "Hello world program."
@@ -61,9 +63,44 @@
 (ert-deftest ob-zig/list-var ()
   "Test of a list input variable"
   (if (executable-find org-babel-zig-compiler)
-      (org-test-at-id "2fabb5f3-b2fd-4048-aa41-727a45027ac3"
+      (org-test-at-id "2df386b8-b2a4-449c-8945-1dacad34e95e"
         (org-babel-next-src-block 1)
         (should (string= "abcdef2" (org-babel-execute-src-block))))))
+
+(ert-deftest ob-zig/integer-table ()
+  "Test int input table"
+  (if (executable-find org-babel-zig-compiler)
+      (org-test-at-id "4a52142b-02e6-416b-a281-dd85c4f69da3"
+        (org-babel-next-src-block 1)
+        (should (equal
+                 '((1 2) (3 4) ("A1" 3) ("B0" 2))
+                 (org-babel-execute-src-block))))))
+
+(ert-deftest ob-zig/float-table ()
+  "Test float input table"
+  (if (executable-find org-babel-zig-compiler)
+      (org-test-at-id "e089fd7b-9634-450d-acb7-36a82168dc30"
+        (org-babel-next-src-block 1)
+        (should (equal
+                 '((1.1 2.2) (3.5 4.7) ("A1" 3.5) ("B0" 2.2))
+                 (org-babel-execute-src-block))))))
+
+(ert-deftest ob-zig/mixed-table ()
+  "Test mixed input table"
+  (if (executable-find org-babel-zig-compiler)
+      (org-test-at-id "e112bc2e-419a-4890-99c2-7ac4779531cc"
+        (org-babel-next-src-block 1)
+        (should (equal
+                 '(("monday" 34)
+                   ("tuesday" 41)
+                   ("wednesday" 56)
+                   ("thursday" 17)
+                   ("friday" 12)
+                   ("saturday" 7)
+                   ("sunday" 4)
+                   ("tuesday_qty" 41)
+                   ("day_idx_4" "friday"))
+                 (org-babel-execute-src-block))))))
 
 (provide 'test-ob-zig)
 ;;; test-ob-zig.el ends here

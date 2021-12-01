@@ -154,7 +154,14 @@ its header arguments."
 		(when colnames
 		  (org-babel-zig-utility-header-to-zig))
 		;; ;; tables headers
-		(mapconcat 'org-babel-zig-header-to-zig colnames "\n")
+                (mapconcat (lambda (head)
+                             (let* ((tblnm (car head))
+                                    (tbl (cdr (car (let* ((el vars))
+                                                     (while (not (or (equal tblnm (caar el)) (not el)))
+                                                       (setq el (cdr el)))
+                                                     el))))
+                                    (type-descriptor (org-babel-zig-val-type-descriptor tbl)))
+                               (org-babel-zig-header-to-zig head type-descriptor))) colnames "\n")
 		;; body
 		(if main-p
 		    (org-babel-zig-ensure-main-wrap body)
@@ -358,7 +365,6 @@ Return a plist:
             :zig-type ,zig-type
             :rank ,rank
             :format-data ,formatter)))
-
     (message "TYPE D: %s" type-descriptor)
     type-descriptor))
 
@@ -369,8 +375,7 @@ Return a plist"
     (cond
      ((string= "table" (plist-get type-descriptor :rank)) (org-babel-zig-table-val-to-zig val type-descriptor))
      ((string= "list" (plist-get type-descriptor :rank)) (org-babel-zig-list-val-to-zig val type-descriptor))
-     (t (org-babel-zig-val-to-zig val type-descriptor))
-    )))
+     (t (org-babel-zig-val-to-zig val type-descriptor)))))
 
 (defun org-babel-zig-var-to-zig-source (pair)
   "Convert an elisp val into a string of zig code specifying a var
@@ -384,35 +389,19 @@ of the same value."
 	(setq val (string-to-char val))))
     (let* ((type-data (org-babel-zig-val-to-zig-type val))
            (var-data (plist-put type-data :var-name var)))
-      (message "Var data: %s" var-data)
+      ;; (message "Var data: %s" var-data)
       (cond
        ((or (string= "table" (plist-get var-data :rank)) (string= "list" (plist-get var-data :rank)))
         (format "const %s = %s%s%s;"
-                (plist-get var-data :var-name)
-                (plist-get var-data :dims)
-                (plist-get var-data :zig-type)
-                ;; (plist-get var-data :dims)
-                ;; (plist-get var-data :zig-type)
-                (plist-get var-data :zig-value)
-                ))
+                        (plist-get var-data :var-name)
+                        (plist-get var-data :dims)
+                        (plist-get var-data :zig-type)
+                        (plist-get var-data :zig-value)
+                        ))
        (t (format "var %s: %s = %s;"
                   (plist-get var-data :var-name)
                   (plist-get var-data :zig-type)
-                  (plist-get var-data :zig-value)
-                  )))
-      )))
-
-;; (defun org-babel-zig-table-sizes-to-zig (pair)
-;;   "Create constants of table dimensions, if PAIR is a table."
-;;   (when (listp (cdr pair))
-;;     (cond
-;;      ((listp (cadr pair)) ;; a table
-;;       (concat
-;;        (format "const usize %s_rows = %d;" (car pair) (length (cdr pair)))
-;;        "\n"
-;;        (format "const usize %s_cols = %d;" (car pair) (length (cadr pair)))))
-;;      (t ;; a list declared in the #+begin_src line
-;;       (format "const usize %s_cols = %d;" (car pair) (length (cdr pair)))))))
+                  (plist-get var-data :zig-value)))))))
 
 (defun org-babel-zig-utility-header-to-zig ()
   "Generate a utility function to convert a column name
@@ -430,11 +419,12 @@ pub fn get_column_idx(header: [2][]const u8, column: []const u8) isize {
 "
 )
 
-(defun org-babel-zig-header-to-zig (head)
+(defun org-babel-zig-header-to-zig (head type-descriptor)
   "Convert an elisp list of header table into a zig vector
 specifying a variable with the name of the table."
   (let ((table (car head))
-        (headers (cdr head)))
+        (headers (cdr head))
+        (zig-type (plist-get type-descriptor :zig-type)))
     (concat
      (format
       "const %s_header = [%s][]const u8{%s};"
@@ -444,11 +434,11 @@ specifying a variable with the name of the table."
      "\n"
      (format
       "
-pub fn %s_h (row: usize, col: []const u8) []const u8 {
+pub fn %s_h (row: usize, col: []const u8) %s {
     return %s[row][@intCast(usize, get_column_idx(%s_header,col))];
 }
 "
-      table table table))))
+      table zig-type table table))))
 
 (provide 'ob-zig)
 ;;; ob-zig.el ends here

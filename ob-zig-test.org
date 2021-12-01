@@ -31,14 +31,16 @@
   try stdout.print("{s} {d}", .{q, q.len});
 #+end_src
 
-#+source: list_var
-#+begin_src zig :var a='("abc" "def") :imports '(std)
-  const stdout = std.io.getStdOut().writer();
-  try stdout.print("{s}{s}{d}", .{a[0], a[1], a.len});
-#+end_src
 
-#+RESULTS: list_var
-: abcdef2
+* List var
+:PROPERTIES:
+:ID:       2df386b8-b2a4-449c-8945-1dacad34e95e
+:END:
+#+source: list_var
+#+begin_src zig :var a='("abc" "def") :imports '(std) :results silent
+const stdout = std.io.getStdOut().writer();
+try stdout.print("{s}{s}{d}", .{a[0], a[1], a.len});
+#+end_src
 
 * Integer table
 :PROPERTIES:
@@ -52,7 +54,7 @@
 
 
 #+source: int_table
-#+begin_src zig :var int_table=int_table :imports '(std) :results verbatim
+#+begin_src zig :var int_table=int_table :imports '(std) :results silent
 
 const stdout = std.io.getStdOut().writer();
 
@@ -63,20 +65,44 @@ pub fn main() !void {
         }
         try stdout.print("\n", .{});
     }
-    try stdout.print("A1: {d}\n", .{int_table_h(1, "A")});
-    try stdout.print("B0 is: {d}\n", .{int_table_h(0, "B")});
+    try stdout.print("A1 {d}\n", .{int_table_h(1, "A")});
+    try stdout.print("B0 {d}\n", .{int_table_h(0, "B")});
 }
 #+end_src
 
-#+RESULTS: int_table
 
-* Float Matrix
+* Float table
 :PROPERTIES:
 :ID:       e089fd7b-9634-450d-acb7-36a82168dc30
 :END:
-#+name: float_matrix
-| 1 | 2 |
-| 3 | 4 |
+#+name: float_table
+|   A |   B |
+|-----+-----|
+| 1.1 | 2.2 |
+| 3.5 | 4.7 |
+
+#+source: float_table
+#+begin_src zig :var float_table=float_table :imports '(std) :results silent
+
+const stdout = std.io.getStdOut().writer();
+
+pub fn main() !void {
+    for (float_table) |row| {
+        for (row) |field| {
+            try stdout.print("{d} ", .{ field });
+        }
+        try stdout.print("\n", .{});
+    }
+    try stdout.print("A1 {d}\n", .{float_table_h(1, "A")});
+    try stdout.print("B0 {d}\n", .{float_table_h(0, "B")});
+}
+#+end_src
+
+#+RESULTS: float_table
+: 1 2
+: 3.5 4.7
+: A1: 3.5
+: B0 is: 2
 
 * Mixed table
 :PROPERTIES:
@@ -95,7 +121,7 @@ pub fn main() !void {
 | sunday    |        4 |
 
 #+source: mixed_table
-#+begin_src zig :var mixed_table=mixed_table :imports '(std) :results verbatim
+#+begin_src zig :var mixed_table=mixed_table :imports '(std) :results silent
 
 const stdout = std.io.getStdOut().writer();
 
@@ -106,8 +132,8 @@ pub fn main() !void {
         }
         try stdout.print("\n", .{});
     }
-    try stdout.print("Tuesday: {s}\n", .{mixed_table_h(1, "quantity")});
-    try stdout.print("Day for idx 4 is: {s}\n", .{mixed_table_h(4, "day")});
+    try stdout.print("tuesday_qty {s}\n", .{mixed_table_h(1, "quantity")});
+    try stdout.print("day_idx_4 {s}\n", .{mixed_table_h(4, "day")});
 }
 #+end_src
 
@@ -119,5 +145,5 @@ pub fn main() !void {
 : friday 12
 : saturday 7
 : sunday 4
-: Tuesday: 41
-: Day for idx 4 is: friday
+: tuesday_qty 41
+: day_idx_4 friday

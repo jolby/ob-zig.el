@@ -88,7 +88,6 @@ parameter may be used, like zig -v"
 (defun org-babel-expand-body:zig (body params &optional processed-params)
   "Expand a block of zig code with org-babel according to
 its header arguments."
-  (message "XXX org-babel-expand-body:zig!!!")
   (let ((vars (org-babel--get-vars params))
 	(colnames (cdr (assq :colname-names params)))
 	(main-p (not (string= (cdr (assq :main params)) "no")))
@@ -132,24 +131,22 @@ its header arguments."
 		;; c-includes
 		(mapconcat
 		 (lambda (inc)
-		   ;; :includes '("stdint.h" "string.h") gives us a list of
+		   ;; :c-includes '("stdint.h" "string.h") gives us a list of
 		   ;; symbols; convert those to strings.
 		   (when (symbolp inc) (setq inc (symbol-name inc)))
                    (format "@cInclude(\"%s\");" inc))
 		 c-includes "\n")
-		;; defines
+		;; c-defines
 		(mapconcat
 		 (lambda (inc) (format "@cDefine(%s);" inc))
 		 (if (listp c-defines) c-defines (list c-defines)) "\n")
-		;; namespaces
+		;; using-namespaces
 		(mapconcat
 		 (lambda (inc) (format "usingnamespace %s;" inc))
 		 using-namespaces
 		 "\n")
 		;; variables
 		(mapconcat 'org-babel-zig-var-to-zig-source vars "\n")
-		;; ;; table sizes
-		;; (mapconcat 'org-babel-zig-table-sizes-to-zig vars "\n")
 		;; ;; tables headers utility
 		(when colnames
 		  (org-babel-zig-utility-header-to-zig))
@@ -228,11 +225,11 @@ This function is called by `org-babel-execute-src-block'"
          (full-command (format "%s run %s"
                                org-babel-zig-compiler
                                (org-babel-process-file-name tmp-src-file))))
-    (message "BODY: %s" full-body)
-    (message "CMD: %s" full-command)
+    ;; (message "BODY: %s" full-body)
+    ;; (message "CMD: %s" full-command)
     (with-temp-file tmp-src-file (insert full-body))
     (let ((results (org-babel-eval full-command "")))
-      (message "CMD RES: %s" results)
+      ;; (message "CMD RES: %s" results)
       ;; results
       (when results
         (setq results (org-remove-indentation results))
@@ -262,8 +259,7 @@ Emacs-lisp table, otherwise return the results as a string."
 (defun org-babel-zig-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
 Return the initialized session."
-  (unless (string= session "none")
-    ))
+  (unless (string= session "none")))
 
 ;; helper functions
 (defun org-babel-zig-format-list-val (list-vals format-data)
@@ -275,8 +271,7 @@ Return the initialized session."
   (let* ((dims (format "[%d]" (length val)))
          (zig-list-val (org-babel-zig-format-list-val val (plist-get type-descriptor :format-data))))
     (plist-put type-descriptor :dims dims)
-    (plist-put type-descriptor :zig-value zig-list-val)
-    ))
+    (plist-put type-descriptor :zig-value zig-list-val)))
 
 (defun org-babel-zig-format-table-val (table-vals format-data inner-dims zig-type)
   (concat "{\n"
@@ -301,8 +296,7 @@ Return the initialized session."
          (zig-type (plist-get type-descriptor :zig-type))
          (zig-table-val (org-babel-zig-format-table-val val format-data inner-dims zig-type)))
     (plist-put type-descriptor :dims dims)
-    (plist-put type-descriptor :zig-value zig-table-val)
-    ))
+    (plist-put type-descriptor :zig-value zig-table-val)))
 
 (defun org-babel-zig-val-to-zig (val type-descriptor)
   (let* ((format-data (plist-get type-descriptor :format-data))
@@ -365,7 +359,7 @@ Return a plist:
             :zig-type ,zig-type
             :rank ,rank
             :format-data ,formatter)))
-    (message "TYPE D: %s" type-descriptor)
+    ;; (message "TYPE D: %s" type-descriptor)
     type-descriptor))
 
 (defun org-babel-zig-val-to-zig-type (val)
@@ -396,8 +390,7 @@ of the same value."
                         (plist-get var-data :var-name)
                         (plist-get var-data :dims)
                         (plist-get var-data :zig-type)
-                        (plist-get var-data :zig-value)
-                        ))
+                        (plist-get var-data :zig-value)))
        (t (format "var %s: %s = %s;"
                   (plist-get var-data :var-name)
                   (plist-get var-data :zig-type)
@@ -416,8 +409,7 @@ pub fn get_column_idx(header: [2][]const u8, column: []const u8) isize {
     }
     return -1;
 }
-"
-)
+")
 
 (defun org-babel-zig-header-to-zig (head type-descriptor)
   "Convert an elisp list of header table into a zig vector

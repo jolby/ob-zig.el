@@ -21,8 +21,9 @@
     (setq ob-zig-setup-location (symbol-file 'ob-zig-setup-location))
   (setq ob-zig-setup-location (buffer-file-name)))
 
-;; (defvar root-org-test-dir "/home/jboehland/repos/emacs/doom-emacs/.local/straight/repos/org/testing")
-(defvar root-org-test-dir (expand-file-name "straight/repos/org/testing" doom-local-dir))
+;; Example from my doom-emacs setup
+;; (add-to-list 'load-path (expand-file-name "straight/repos/org/testing" doom-local-dir))
+
 (defvar ob-zig-test-dir (file-name-directory ob-zig-setup-location))
 
 (defun test-ob-zig-id-files ()
@@ -36,20 +37,18 @@
   (org-id-update-id-locations
    (test-ob-zig-id-files)))
 
-(defun ot-update ()
-  (interactive)
-  (org-test-update-id-locations))
-
 (defun test-ob-zig-setup-tests ()
   (interactive)
-  (if (and (stringp root-org-test-dir) (file-exists-p root-org-test-dir))
-      (add-to-list 'load-path root-org-test-dir)
-    (error "Required variable: root-org-test-dir [%s] not set or that directory doesn't exist! " root-org-test-dir))
+  (condition-case no-org-test-error
+      (progn
+        (require 'org-test))
+    (error
+     (message "Error loading org-test. You must ensure the directory containing org-test.el is on the load-path. %s" (error-message-string no-org-test-error))))
+
   (if (and (stringp ob-zig-setup-location) (file-exists-p ob-zig-setup-location))
       (add-to-list 'load-path (file-name-directory  ob-zig-setup-location))
     (error "Required variable: ob-zig-setup-location [%s] not set or that directory doesn't exist! " ob-zig-setup-location))
 
-  (require 'org-test)
   (require 'org-archive)
   (require 'ob-zig)
   (require 'test-ob-zig)

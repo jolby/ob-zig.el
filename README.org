@@ -4,11 +4,23 @@
  mostly follows ob-C.el, which provides org-babel support for the
  C/C++/D languages.
 * Prerequisites
- - A recent-ish zig compiler. [[https://ziglang.org/download/][Download Zig]].
- - zig-mode.el [[https://github.com/ziglang/zig-mode][Download zig-mode]]
+ - A recent zig compiler that is installed on the exec PATH. [[https://ziglang.org/download/][Download Zig]].
  - org-mode/org-babel - these packages come installed with most recent emacs.
+
+It is also nice to have zig-mode installed for working with zig source:
+ - zig-mode.el [[https://github.com/ziglang/zig-mode][Download zig-mode]]
+
 * Testing
-ob-zig.el has a test suite that integrates with the ERT test framework that
-comes with emacs. The file test-ob-zig-runner.el has some utility functions for
-setting up paths and running the ERT test suite. It should be sufficient to load
-that file and then call the interactive function: M-X test-ob-zig-run-tests.
+ob-zig.el has a test suite that works with the [[https://www.gnu.org/software/emacs/manual/html_node/ert/index.html][ERT (Emacs Lisp Regression
+Testing)]] and org-test framework that comes with emacs. The directory containing
+org-test.el needs to be on the load path. In most cases this will be the
+"testing" directory under the root of the main org package on your system. On my
+doom-emacs setup, I needed to do this to get org-test on the load path:
+
+#+begin_src elisp
+(add-to-list 'load-path (expand-file-name "straight/repos/org/testing" doom-local-dir))
+#+end_src
+
+The file test-ob-zig-runner.el has some utility functions for setting up paths
+and running the ERT test suite. It should be sufficient to load that file and
+then call the interactive function: M-x test-ob-zig-run-tests.

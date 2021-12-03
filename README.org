@@ -1,6 +1,6 @@
-#+TITLE: ob-zig.el - Org Babel bindings for the zig language
+#+TITLE: ob-zig.el - Org Babel bindings for the Zig programming language
 * Introduction
- ob-zig.el provides org-babel support for the zig language. This implementation
+ ob-zig.el provides org-babel support for the [[https://ziglang.org][Zig]] programming language. This implementation
  mostly follows ob-C.el, which provides org-babel support for the
  C/C++/D languages.
 * Prerequisites

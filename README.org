@@ -1,0 +1,14 @@
+#+TITLE: ob-zig.el - Org Babel bindings for the zig language
+* Introduction
+ ob-zig.el provides org-babel support for the zig language. This implementation
+ mostly follows ob-C.el, which provides org-babel support for the
+ C/C++/D languages.
+* Prerequisites
+ - A recent-ish zig compiler. [[https://ziglang.org/download/][Download Zig]].
+ - zig-mode.el [[https://github.com/ziglang/zig-mode][Download zig-mode]]
+ - org-mode/org-babel - these packages come installed with most recent emacs.
+* Testing
+ob-zig.el has a test suite that integrates with the ERT test framework that
+comes with emacs. The file test-ob-zig-runner.el has some utility functions for
+setting up paths and running the ERT test suite. It should be sufficient to load
+that file and then call the interactive function: M-X test-ob-zig-run-tests.

@@ -29,8 +29,7 @@
 (ert-deftest ob-zig/elisp-to-zig-types ()
   (should (equal 'integerp (org-babel-zig-val-to-base-type 1)))
   (should (equal 'floatp (org-babel-zig-val-to-base-type 1.5)))
-  (should (equal 'stringp (org-babel-zig-val-to-base-type "FOO")))
-  )
+  (should (equal 'stringp (org-babel-zig-val-to-base-type "FOO"))))
 
 (ert-deftest ob-zig/simple-program ()
   "Hello world program."

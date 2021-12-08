@@ -14,7 +14,7 @@ It is also nice to have zig-mode installed for working with zig source:
  - zig-mode.el [[https://github.com/ziglang/zig-mode][Download zig-mode]]
 * Installation
 #+begin_src shell
-git clone git@github.com:jolby/ob-zig.el.git
+git clone https://github.com/jolby/ob-zig.el.git
 #+end_src
 
 #+begin_src emacs-lisp

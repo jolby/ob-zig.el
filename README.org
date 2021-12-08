@@ -30,11 +30,11 @@ C-v C-v=
 
 Here is an example of a zig code block within an org-mode document:
 #+begin_src org
-,#+source: simple
-,#+begin_src zig :imports '(std)
-,const stdout = std.io.getStdOut().writer();
-,try stdout.print("{s}", .{"hello"});
-,#+end_src
+#+source: simple
+#+begin_src zig :imports '(std)
+  const stdout = std.io.getStdOut().writer();
+  try stdout.print("{s}", .{"hello"});
+#+end_src
 #+end_src
 If you place the cursor somewhere within the above code block, and then press
 the key chord: =C-c C-c=, emacs will execute that zig source code and insert the

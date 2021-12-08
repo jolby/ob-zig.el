@@ -25,8 +25,22 @@ org mode documents.
 * Usage
 See the file ob-zig-test.org for examples of zig code blocks. If you place your
 cursor within the code blocks you can compile and execute using the key chord:
-C-c C-c You can also view the expanded source code block with the key chord: C-c
-C-v C-v
+=C-c C-c= You can also view the expanded source code block with the key chord: =C-c
+C-v C-v=
+
+Here is an example of a zig code block within an org-mode document:
+#+begin_src org
+,#+source: simple
+,#+begin_src zig :imports '(std)
+,const stdout = std.io.getStdOut().writer();
+,try stdout.print("{s}", .{"hello"});
+,#+end_src
+#+end_src
+If you place the cursor somewhere within the above code block, and then press
+the key chord: =C-c C-c=, emacs will execute that zig source code and insert the
+result below:
+#+RESULTS: simple
+: hello
 
 Read the documentation of Org Babel for more examples of what you can do with
 source code blocks of many different languages.
@@ -43,4 +57,4 @@ doom-emacs setup, I needed to do this to get org-test on the load path:
 
 The file test-ob-zig-runner.el has some utility functions for setting up paths
 and running the ERT test suite. It should be sufficient to load that file and
-then call the interactive function: M-x test-ob-zig-run-tests.
+then call the interactive function: =M-x test-ob-zig-run-tests=.

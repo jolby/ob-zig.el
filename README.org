@@ -1,15 +1,35 @@
 #+TITLE: ob-zig.el - Org Babel bindings for the Zig programming language
 * Introduction
- ob-zig.el provides org-babel support for the [[https://ziglang.org][Zig]] programming language. This implementation
- mostly follows ob-C.el, which provides org-babel support for the
- C/C++/D languages.
+ ob-zig.el provides [[https://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] support for the [[https://ziglang.org][Zig]] programming language. Org
+ Babel allows you to interactively edit and execute source code for many
+ different languages in the same document.
+
+This implementation mostly follows ob-C.el, which provides org-babel support for
+the C/C++/D languages.
 * Prerequisites
  - A recent zig compiler that is installed on the exec PATH. [[https://ziglang.org/download/][Download Zig]].
  - org-mode/org-babel - these packages come installed with most recent emacs.
 
 It is also nice to have zig-mode installed for working with zig source:
  - zig-mode.el [[https://github.com/ziglang/zig-mode][Download zig-mode]]
+* Installation
+#+begin_src shell
+git clone git@github.com:jolby/ob-zig.el.git
+#+end_src
 
+#+begin_src emacs-lisp
+(add-to-list 'load-path "/home/path-to-where-you-checked-out-ob-zig/")
+#+end_src
+At this point, you should be able to interactively execute zig source blocks in
+org mode documents.
+* Usage
+See the file ob-zig-test.org for examples of zig code blocks. If you place your
+cursor within the code blocks you can compile and execute using the key chord:
+C-c C-c You can also view the expanded source code block with the key chord: C-c
+C-v C-v
+
+Read the documentation of Org Babel for more examples of what you can do with
+source code blocks of many different languages.
 * Testing
 ob-zig.el has a test suite that works with the [[https://www.gnu.org/software/emacs/manual/html_node/ert/index.html][ERT (Emacs Lisp Regression
 Testing)]] and org-test framework that comes with emacs. The directory containing

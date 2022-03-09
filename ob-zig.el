@@ -80,7 +80,7 @@ parameter may be used, like zig -v"
   :type 'string)
 
 (defcustom org-babel-zig-string-type "[]const u8"
-  "Default zig floating-point type"
+  "Default zig string type"
   :group 'org-babel
   :version "24.3"
   :type 'string)

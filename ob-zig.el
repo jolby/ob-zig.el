@@ -406,9 +406,9 @@ into a column number."
 
 "
 pub fn get_column_idx(header: [2][]const u8, column: []const u8) isize {
-    for (header) |col, i| {
-        if (std.mem.eql(u8, std.mem.span(col), std.mem.span(column))) {
-            return @intCast(isize, i);
+    for (header, 0..) |col, i| {
+        if (std.mem.eql(u8, col, column)) {
+            return @intCast(i);
         }
     }
     return -1;
@@ -431,7 +431,7 @@ specifying a variable with the name of the table."
      (format
       "
 pub fn %s_h (row: usize, col: []const u8) %s {
-    return %s[row][@intCast(usize, get_column_idx(%s_header,col))];
+    return %s[row][@intCast(get_column_idx(%s_header,col))];
 }
 "
       table zig-type table table))))

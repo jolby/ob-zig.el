@@ -53,9 +53,10 @@
   (require 'ob-zig)
   (require 'test-ob-zig)
 
-  (org-babel-do-load-languages (and (mapc (lambda (lang) (add-to-list 'org-babel-load-languages (cons lang t)))
-                                          '(zig org))
-                                    org-babel-load-languages))
+  (add-to-list 'org-babel-load-languages '(org . t))
+  (add-to-list 'org-babel-load-languages '(zig . t))
+
+  (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
   (test-ob-zig-update-id-locations))
 
 (defun test-ob-zig-run-tests ()

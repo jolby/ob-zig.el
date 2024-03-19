@@ -53,9 +53,7 @@
   (require 'ob-zig)
   (require 'test-ob-zig)
 
-  (add-to-list 'org-babel-load-languages '(org . t))
   (add-to-list 'org-babel-load-languages '(zig . t))
-
   (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
   (test-ob-zig-update-id-locations))
 

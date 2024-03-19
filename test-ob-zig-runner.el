@@ -18,13 +18,16 @@
 (defvar ob-zig-setup-location nil)
 
 (if load-in-progress
-    (setq ob-zig-setup-location (symbol-file 'ob-zig-setup-location))
+    (if (symbol-file 'ob-zig-setup-location) 
+        (setq ob-zig-setup-location (symbol-file 'ob-zig-setup-location)))
   (setq ob-zig-setup-location (buffer-file-name)))
 
 ;; Example from my doom-emacs setup
 ;; (add-to-list 'load-path (expand-file-name "straight/repos/org/testing" doom-local-dir))
 
-(defvar ob-zig-test-dir (file-name-directory ob-zig-setup-location))
+(defvar ob-zig-test-dir
+  (if ob-zig-setup-location
+      (file-name-directory ob-zig-setup-location)))
 
 (defun test-ob-zig-id-files ()
   (interactive)

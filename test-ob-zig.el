@@ -60,21 +60,21 @@
         (should (equal "word 4" (org-babel-execute-src-block))))))
 
 (ert-deftest ob-zig/simple-zig-test ()
-  "Test of a string input variable"
+  "Simple Zig test"
   (if (executable-find org-babel-zig-compiler)
       (org-test-at-id "b1d3335f-8731-43b8-9246-6e613f3be3a2"
         (org-babel-next-src-block 1)
         (should (equal "hello" (org-babel-execute-src-block))))))
 
 (ert-deftest ob-zig/fn-zig-test ()
-  "Test of a string input variable"
+  "Zig test with a function"
   (if (executable-find org-babel-zig-compiler)
       (org-test-at-id "b1d3335f-8731-43b8-9246-6e613f3be3a2"
         (org-babel-next-src-block 2)
         (should (equal "hello" (org-babel-execute-src-block))))))
 
 (ert-deftest ob-zig/mutli-tests-zig-test ()
-  "Test of a string input variable"
+  "Test with multiple test functions"
   (if (executable-find org-babel-zig-compiler)
       (org-test-at-id "b1d3335f-8731-43b8-9246-6e613f3be3a2"
         (org-babel-next-src-block 3)

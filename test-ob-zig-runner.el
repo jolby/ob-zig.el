@@ -18,13 +18,16 @@
 (defvar ob-zig-setup-location nil)
 
 (if load-in-progress
-    (setq ob-zig-setup-location (symbol-file 'ob-zig-setup-location))
+    (if (symbol-file 'ob-zig-setup-location) 
+        (setq ob-zig-setup-location (symbol-file 'ob-zig-setup-location)))
   (setq ob-zig-setup-location (buffer-file-name)))
 
 ;; Example from my doom-emacs setup
 ;; (add-to-list 'load-path (expand-file-name "straight/repos/org/testing" doom-local-dir))
 
-(defvar ob-zig-test-dir (file-name-directory ob-zig-setup-location))
+(defvar ob-zig-test-dir
+  (if ob-zig-setup-location
+      (file-name-directory ob-zig-setup-location)))
 
 (defun test-ob-zig-id-files ()
   (interactive)
@@ -53,9 +56,8 @@
   (require 'ob-zig)
   (require 'test-ob-zig)
 
-  (org-babel-do-load-languages (and (mapc (lambda (lang) (add-to-list 'org-babel-load-languages (cons lang t)))
-                                          '(zig org))
-                                    org-babel-load-languages))
+  (add-to-list 'org-babel-load-languages '(zig . t))
+  (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
   (test-ob-zig-update-id-locations))
 
 (defun test-ob-zig-run-tests ()

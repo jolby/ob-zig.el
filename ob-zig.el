@@ -91,6 +91,7 @@ its header arguments."
   (let ((vars (org-babel--get-vars params))
 	(colnames (cdr (assq :colname-names params)))
 	(main-p (not (string= (cdr (assq :main params)) "no")))
+	(testsuite (string= (cdr (assq :testsuite params)) "yes"))
         (imports (org-babel-read
                   (cdr (assq :imports params))
                   nil))
@@ -160,7 +161,7 @@ its header arguments."
                                     (type-descriptor (org-babel-zig-val-type-descriptor tbl)))
                                (org-babel-zig-header-to-zig head type-descriptor))) colnames "\n")
 		;; body
-		(if main-p
+		(if (and main-p (not testsuite))
 		    (org-babel-zig-ensure-main-wrap body)
 		  body) "\n") "\n")))
 
@@ -205,6 +206,7 @@ This function is called by `org-babel-execute-src-block'"
          ;; expand the body with `org-babel-expand-body:zig'
          (tmp-src-file (org-babel-temp-file
 			"Zig-src-" ".zig"))
+        (testsuite (string= (cdr (assq :testsuite params)) "yes"))
 	 ;; (tmp-bin-file
 	 ;;  (org-babel-process-file-name
 	 ;;   (org-babel-temp-file "Zig-bin-" org-babel-exeext)))
@@ -221,9 +223,11 @@ This function is called by `org-babel-execute-src-block'"
 			  (if (listp libs) libs (list libs))
 			  " "))
          (full-body (org-babel-expand-body:zig
-                     body params processed-params))
-         (full-command (format "%s run %s"
+                     body params processed-params ))
+         (zig-execute-command (if testsuite "test" "run"))
+         (full-command (format "%s %s %s"
                                org-babel-zig-compiler
+                               zig-execute-command
                                (org-babel-process-file-name tmp-src-file))))
     ;; (message "BODY: %s" full-body)
     ;; (message "CMD: %s" full-command)
@@ -402,9 +406,9 @@ into a column number."
 
 "
 pub fn get_column_idx(header: [2][]const u8, column: []const u8) isize {
-    for (header) |col, i| {
-        if (std.mem.eql(u8, std.mem.span(col), std.mem.span(column))) {
-            return @intCast(isize, i);
+    for (header, 0..) |col, i| {
+        if (std.mem.eql(u8, col, column)) {
+            return @intCast(i);
         }
     }
     return -1;
@@ -427,7 +431,7 @@ specifying a variable with the name of the table."
      (format
       "
 pub fn %s_h (row: usize, col: []const u8) %s {
-    return %s[row][@intCast(usize, get_column_idx(%s_header,col))];
+    return %s[row][@intCast(get_column_idx(%s_header,col))];
 }
 "
       table zig-type table table))))

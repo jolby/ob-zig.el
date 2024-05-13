@@ -30,6 +30,58 @@
   try stdout.print("{s} {d}", .{q, q.len});
 #+end_src
 
+* Tests zig tests
+:PROPERTIES: 
+:ID:       b1d3335f-8731-43b8-9246-6e613f3be3a2
+:END:
+#+source: simple_zig_test
+#+begin_src zig :imports '(std) :testsuite 'yes :results silent 
+  test "simple test" {
+    const stdout = std.io.getStdOut().writer();
+    const hello = "hello";
+
+    try std.testing.expectEqual("hello", hello);
+    try stdout.print("{s}", .{hello});
+  }
+#+end_src
+
+#+source: fn_zig_test
+#+begin_src zig :imports '(std) :testsuite 'yes :results silent 
+  fn helloFn() []const u8 {
+      return "hello";
+  }
+
+  test "fn test" {
+      const stdout = std.io.getStdOut().writer();
+      var hello = helloFn();
+
+      try std.testing.expectEqualStrings("hello", hello);
+      try stdout.print("{s}", .{hello});
+  }
+#+end_src
+
+#+source: multi_tests_zig_test
+#+begin_src zig :imports '(std) :testsuite 'yes :results silent 
+  fn helloFn() []const u8 {
+      return "hello";
+  }
+
+  test "fn test" {
+      const stdout = std.io.getStdOut().writer();
+      var hello = helloFn();
+
+      try std.testing.expectEqualStrings("hello", hello);
+      try stdout.print("{s}", .{hello});
+  }
+
+  test "simple test" {
+    const stdout = std.io.getStdOut().writer();
+    var hello = "hello";
+
+    try std.testing.expectEqual("hello", hello);
+    try stdout.print("{s}", .{hello});
+  }
+#+end_src
 
 * List var
 :PROPERTIES:

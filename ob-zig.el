@@ -50,12 +50,13 @@
 ;; optionally declare default header arguments for this language
 (defvar org-babel-default-header-args:zig '())
 
-(defconst org-babel-header-args:zig '((includes . :any)
-                                      (imports . :any)
-                                      (main    . :any)
-                                      (flags   . :any)
-                                      (cmdline . :any)
-                                      (libs    . :any))
+(defconst org-babel-header-args:zig '((includes  . :any)
+                                      (imports   . :any)
+                                      (main      . :any)
+                                      (flags     . :any)
+                                      (cmdline   . :any)
+                                      (libs      . :any)
+                                      (testsuite . ((yes no))))
   "Zig-specific header arguments.")
 
 (defcustom org-babel-zig-compiler "zig"
